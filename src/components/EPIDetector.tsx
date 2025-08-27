@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Detection {
   id: string;
-  type: 'person' | 'helmet' | 'mask' | 'gloves' | 'glasses' | 'vest';
+  type: 'person' | 'hat' | 'mask' | 'gloves' | 'glasses' | 'boots' | 'hearing';
   confidence: number;
   x: number;
   y: number;
@@ -21,6 +21,7 @@ interface Detection {
   h: number;
   frame: number;
   timestamp: number;
+  className?: string; // Nome original da classe da API
 }
 
 interface Alert {
@@ -37,7 +38,7 @@ export const EPIDetector: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [detections, setDetections] = useState<Detection[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [apiToken, setApiToken] = useState<string>('');
+  const [apiToken, setApiToken] = useState<string>('dapi4a5d76e7aac9b8727cc7a2a771f104be'); // Token padrão do documento
   const [currentFrame, setCurrentFrame] = useState(0);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const { toast } = useToast();
@@ -146,7 +147,7 @@ export const EPIDetector: React.FC = () => {
 
   const callPPEDetectorAPI = async (imageBase64: string, token: string) => {
     const response = await fetch(
-      'https://adb-367534349465137.17.azuredatabricks.net/serving-endpoints/ppe-detector/invocations',
+      'https://adb-367534349465137.17.azuredatabricks.net/serving-endpoints/ppe_senac_detector/invocations',
       {
         method: 'POST',
         headers: {
@@ -162,8 +163,92 @@ export const EPIDetector: React.FC = () => {
   };
 
   const processDetections = (personData: any, ppeData: any, frame: number) => {
-    // Lógica para processar detecções e gerar alertas
-    // Implementar a correlação entre pessoas e EPIs
+    const newDetections: Detection[] = [];
+    const frameAlerts: Alert[] = [];
+    
+    // Processar detecções de pessoas
+    if (personData.predictions && personData.predictions[0] && personData.predictions[0].persons) {
+      personData.predictions[0].persons.forEach((person: any, index: number) => {
+        const detection: Detection = {
+          id: `person_${frame}_${index}`,
+          type: 'person',
+          confidence: person.score || person.confidence || 0,
+          x: person.box ? person.box[0] : person.x || 0,
+          y: person.box ? person.box[1] : person.y || 0,
+          w: person.box ? (person.box[2] - person.box[0]) : person.w || 0,
+          h: person.box ? (person.box[3] - person.box[1]) : person.h || 0,
+          frame,
+          timestamp: Date.now()
+        };
+        newDetections.push(detection);
+      });
+    }
+
+    // Processar detecções de EPIs com mapeamento
+    const epiMapping: Record<string, string> = {
+      'hat': 'hat',
+      'boots': 'boots', 
+      'hearing': 'hearing',
+      'glasses': 'glasses', // Mapeado para "Goggles" no relatório
+      'mask': 'mask',       // Mapeado para "Mask" no relatório
+      'gloves': 'gloves'    // Mapeado para "Gloves" no relatório
+    };
+
+    const detectedEPIClasses = new Set<string>();
+    
+    if (ppeData.predictions && ppeData.predictions[0] && ppeData.predictions[0].ppe_detections) {
+      ppeData.predictions[0].ppe_detections.forEach((epi: any, index: number) => {
+        const className = epi.class_name?.toLowerCase();
+        const mappedType = epiMapping[className];
+        
+        if (mappedType && className !== 'person') {
+          const box = epi.box_model_input_coords || epi.box || [0, 0, 0, 0];
+          const detection: Detection = {
+            id: `epi_${frame}_${index}`,
+            type: mappedType as Detection['type'],
+            confidence: epi.score || epi.confidence || 0,
+            x: Array.isArray(box) ? box[0] : 0,
+            y: Array.isArray(box) ? box[1] : 0, 
+            w: Array.isArray(box) ? (box[2] - box[0]) : 0,
+            h: Array.isArray(box) ? (box[3] - box[1]) : 0,
+            frame,
+            timestamp: Date.now(),
+            className: epi.class_name
+          };
+          newDetections.push(detection);
+          detectedEPIClasses.add(className);
+        }
+      });
+    }
+
+    // Verificar EPIs obrigatórios (conforme documento: Mask e Goggles)
+    const requiredEPIs = new Set(['mask', 'glasses']); // glasses é mapeado para "Goggles"
+    const missingEPIs = Array.from(requiredEPIs).filter(epi => !detectedEPIClasses.has(epi));
+    
+    // Gerar alertas se há pessoas detectadas e EPIs faltando
+    const personsInFrame = newDetections.filter(d => d.type === 'person');
+    if (personsInFrame.length > 0 && missingEPIs.length > 0) {
+      personsInFrame.forEach((person, personIndex) => {
+        const alert: Alert = {
+          id: `alert_${frame}_${personIndex}`,
+          personId: person.id,
+          missingEPIs: missingEPIs.map(epi => {
+            // Mapear para nomes mais amigáveis
+            if (epi === 'mask') return 'Máscara';
+            if (epi === 'glasses') return 'Óculos de Proteção';
+            return epi;
+          }),
+          severity: missingEPIs.length >= 2 ? 'high' : missingEPIs.length === 1 ? 'medium' : 'low',
+          frame,
+          timestamp: Date.now()
+        };
+        frameAlerts.push(alert);
+      });
+    }
+
+    // Atualizar estados
+    setDetections(prev => [...prev, ...newDetections]);
+    setAlerts(prev => [...prev, ...frameAlerts]);
   };
 
   const getStatusSummary = () => {

@@ -7,7 +7,7 @@ import { AlertTriangle, Shield, TrendingUp, TrendingDown, Users, HardHat } from 
 
 interface Detection {
   id: string;
-  type: 'person' | 'helmet' | 'mask' | 'gloves' | 'glasses' | 'vest';
+  type: 'person' | 'hat' | 'mask' | 'gloves' | 'glasses' | 'boots' | 'hearing';
   confidence: number;
   x: number;
   y: number;
@@ -15,6 +15,7 @@ interface Detection {
   h: number;
   frame: number;
   timestamp: number;
+  className?: string;
 }
 
 interface Alert {
@@ -32,22 +33,24 @@ interface AlertDashboardProps {
 }
 
 export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detections }) => {
-  // Estatísticas das detecções
+  // Estatísticas das detecções (seguindo os EPIs do documento)
   const getDetectionStats = () => {
     const personDetections = detections.filter(d => d.type === 'person').length;
-    const helmetDetections = detections.filter(d => d.type === 'helmet').length;
+    const hatDetections = detections.filter(d => d.type === 'hat').length;
     const maskDetections = detections.filter(d => d.type === 'mask').length;
     const glovesDetections = detections.filter(d => d.type === 'gloves').length;
     const glassesDetections = detections.filter(d => d.type === 'glasses').length;
-    const vestDetections = detections.filter(d => d.type === 'vest').length;
+    const bootsDetections = detections.filter(d => d.type === 'boots').length;
+    const hearingDetections = detections.filter(d => d.type === 'hearing').length;
 
     return {
       personDetections,
-      helmetDetections,
+      hatDetections,
       maskDetections,
       glovesDetections,
       glassesDetections,
-      vestDetections
+      bootsDetections,
+      hearingDetections
     };
   };
 
@@ -75,7 +78,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
     };
   };
 
-  // Taxa de conformidade por EPI
+  // Taxa de conformidade por EPI (seguindo os EPIs do documento)
   const getComplianceRates = () => {
     const stats = getDetectionStats();
     const { personDetections } = stats;
@@ -83,11 +86,12 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
     if (personDetections === 0) return {};
 
     return {
-      helmet: ((stats.helmetDetections / personDetections) * 100).toFixed(1),
+      hat: ((stats.hatDetections / personDetections) * 100).toFixed(1),
       mask: ((stats.maskDetections / personDetections) * 100).toFixed(1),
       gloves: ((stats.glovesDetections / personDetections) * 100).toFixed(1),
       glasses: ((stats.glassesDetections / personDetections) * 100).toFixed(1),
-      vest: ((stats.vestDetections / personDetections) * 100).toFixed(1)
+      boots: ((stats.bootsDetections / personDetections) * 100).toFixed(1),
+      hearing: ((stats.hearingDetections / personDetections) * 100).toFixed(1)
     };
   };
 
@@ -96,19 +100,21 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
   const complianceRates = getComplianceRates();
 
   const epiLabels = {
-    helmet: 'Capacete',
-    mask: 'Máscara',
+    hat: 'Capacete',
+    mask: 'Máscara', 
     gloves: 'Luvas',
-    glasses: 'Óculos',
-    vest: 'Colete'
+    glasses: 'Óculos de Proteção',
+    boots: 'Botas de Segurança',
+    hearing: 'Proteção Auditiva'
   };
 
   const epiIcons = {
-    helmet: HardHat,
+    hat: HardHat,
     mask: Shield,
     gloves: Shield,
     glasses: Shield,
-    vest: Shield
+    boots: Shield,
+    hearing: Shield
   };
 
   return (

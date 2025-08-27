@@ -78,7 +78,7 @@ export const APIConfig: React.FC<APIConfigProps> = ({ apiToken, onTokenChange })
 
       const testPPEAPI = async () => {
         const response = await fetch(
-          'https://adb-367534349465137.17.azuredatabricks.net/serving-endpoints/ppe-detector/invocations',
+          'https://adb-367534349465137.17.azuredatabricks.net/serving-endpoints/ppe_senac_detector/invocations',
           {
             method: 'POST',
             headers: {
@@ -265,7 +265,7 @@ export const APIConfig: React.FC<APIConfigProps> = ({ apiToken, onTokenChange })
                   <span className="text-sm font-medium">PPE Detector API</span>
                   <Button variant="ghost" size="sm" asChild>
                     <a 
-                      href="https://adb-367534349465137.17.azuredatabricks.net/serving-endpoints/ppe-detector/invocations"
+                      href="https://adb-367534349465137.17.azuredatabricks.net/serving-endpoints/ppe_senac_detector/invocations"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -274,7 +274,7 @@ export const APIConfig: React.FC<APIConfigProps> = ({ apiToken, onTokenChange })
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground font-mono break-all">
-                  https://adb-367534349465137.17.azuredatabricks.net/serving-endpoints/ppe-detector/invocations
+                  https://adb-367534349465137.17.azuredatabricks.net/serving-endpoints/ppe_senac_detector/invocations
                 </p>
               </div>
             </div>

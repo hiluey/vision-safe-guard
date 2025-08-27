@@ -7,7 +7,7 @@ import { Play, Pause, SkipForward, SkipBack, Volume2, Maximize } from 'lucide-re
 
 interface Detection {
   id: string;
-  type: 'person' | 'helmet' | 'mask' | 'gloves' | 'glasses' | 'vest';
+  type: 'person' | 'hat' | 'mask' | 'gloves' | 'glasses' | 'boots' | 'hearing';
   confidence: number;
   x: number;
   y: number;
@@ -15,6 +15,7 @@ interface Detection {
   h: number;
   frame: number;
   timestamp: number;
+  className?: string;
 }
 
 interface VideoPlayerProps {
@@ -98,14 +99,15 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     currentDetections.forEach(detection => {
       const { type, confidence, x, y, w, h } = detection;
       
-      // Cores por tipo de detecção
+      // Cores por tipo de detecção (seguindo os EPIs do documento)
       const colors = {
-        person: '#3b82f6', // blue
-        helmet: '#22c55e', // green
-        mask: '#f59e0b', // amber
-        gloves: '#8b5cf6', // violet
-        glasses: '#06b6d4', // cyan
-        vest: '#ef4444'  // red
+        person: '#3b82f6',    // blue
+        hat: '#22c55e',       // green (capacete)
+        mask: '#f59e0b',      // amber (máscara)
+        gloves: '#8b5cf6',    // violet (luvas)
+        glasses: '#06b6d4',   // cyan (óculos)
+        boots: '#ef4444',     // red (botas)
+        hearing: '#f97316'    // orange (proteção auditiva)
       };
 
       const color = colors[type] || '#6b7280';
@@ -304,8 +306,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   variant="outline"
                   className={`text-xs ${
                     detection.type === 'person' ? 'border-primary text-primary' :
-                    detection.type === 'helmet' ? 'border-success text-success' :
+                    detection.type === 'hat' ? 'border-success text-success' :
                     detection.type === 'mask' ? 'border-warning text-warning' :
+                    detection.type === 'glasses' ? 'border-primary text-primary' :
                     'border-muted-foreground text-muted-foreground'
                   }`}
                 >
