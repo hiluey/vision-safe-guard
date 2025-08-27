@@ -213,10 +213,10 @@ export const APIConfig: React.FC<APIConfigProps> = ({ apiToken, onTokenChange })
             </div>
           </div>
 
-          <Separator />
+          {/*<Separator />*/}
 
           {/* Connection Status */}
-          <div className="space-y-4">
+          {/*<div className="space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-medium">Status da Conexão</h4>
               {getStatusBadge()}
@@ -233,7 +233,7 @@ export const APIConfig: React.FC<APIConfigProps> = ({ apiToken, onTokenChange })
                 </AlertDescription>
               </Alert>
             )}
-          </div>
+          </div>*/}
 
           <Separator />
 
@@ -280,10 +280,10 @@ export const APIConfig: React.FC<APIConfigProps> = ({ apiToken, onTokenChange })
             </div>
           </div>
 
-          <Separator />
+          {/*<Separator />*/}
 
           {/* Usage Instructions */}
-          <div className="space-y-4">
+          {/*<div className="space-y-4">
             <h4 className="text-sm font-medium">Como obter o token</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>1. Acesse o Databricks workspace</p>
@@ -299,7 +299,7 @@ export const APIConfig: React.FC<APIConfigProps> = ({ apiToken, onTokenChange })
                 Este token dá acesso aos modelos de ML hospedados no Databricks.
               </AlertDescription>
             </Alert>
-          </div>
+          </div>*/}
         </CardContent>
       </Card>
     </div>
