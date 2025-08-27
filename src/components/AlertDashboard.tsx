@@ -268,7 +268,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
       </div>
 
       {/* EPIs Mais Faltantes */}
-      <Card>
+       {/*<Card>
         <CardHeader>
           <CardTitle>EPIs Mais Faltantes</CardTitle>
         </CardHeader>
@@ -299,10 +299,10 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
             </div>
           )}
         </CardContent>
-      </Card>
+      </Card>*/}
 
       {/* Alertas Recentes */}
-      <Card>
+      {/*<Card>
         <CardHeader>
           <CardTitle>Alertas Recentes</CardTitle>
         </CardHeader>
@@ -353,7 +353,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
             </div>
           )}
         </CardContent>
-      </Card>
+      </Card>*/}
     </div>
   );
 };
