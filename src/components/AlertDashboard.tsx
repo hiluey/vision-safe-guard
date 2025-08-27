@@ -86,14 +86,15 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
     if (personDetections === 0) return {};
 
     return {
-      hat: ((stats.hatDetections / personDetections) * 100).toFixed(1),
-      mask: ((stats.maskDetections / personDetections) * 100).toFixed(1),
-      gloves: ((stats.glovesDetections / personDetections) * 100).toFixed(1),
-      glasses: ((stats.glassesDetections / personDetections) * 100).toFixed(1),
-      boots: ((stats.bootsDetections / personDetections) * 100).toFixed(1),
-      hearing: ((stats.hearingDetections / personDetections) * 100).toFixed(1)
+      hat: Math.min(100, (stats.hatDetections / personDetections) * 100).toFixed(1),
+      mask: Math.min(100, (stats.maskDetections / personDetections) * 100).toFixed(1),
+      gloves: Math.min(100, (stats.glovesDetections / personDetections) * 100).toFixed(1),
+      glasses: Math.min(100, (stats.glassesDetections / personDetections) * 100).toFixed(1),
+      boots: Math.min(100, (stats.bootsDetections / personDetections) * 100).toFixed(1),
+      hearing: Math.min(100, (stats.hearingDetections / personDetections) * 100).toFixed(1)
     };
   };
+
 
   const stats = getDetectionStats();
   const alertStats = getAlertStats();
@@ -101,7 +102,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
 
   const epiLabels = {
     hat: 'Capacete',
-    mask: 'Máscara', 
+    mask: 'Máscara',
     gloves: 'Luvas',
     glasses: 'Óculos de Proteção',
     boots: 'Botas de Segurança',
@@ -155,10 +156,11 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
               <div>
                 <p className="text-sm text-muted-foreground">Taxa de Conformidade</p>
                 <p className="text-3xl font-bold text-success">
-                  {stats.personDetections > 0 
-                    ? (((stats.personDetections - alertStats.totalAlerts) / stats.personDetections) * 100).toFixed(1)
+                  {stats.personDetections > 0
+                    ? Math.max(0, Math.min(100, ((stats.personDetections - alertStats.totalAlerts) / stats.personDetections) * 100)).toFixed(1)
                     : 0}%
                 </p>
+
               </div>
               <div className="h-12 w-12 bg-success/10 rounded-lg flex items-center justify-center">
                 <Shield className="h-6 w-6 text-success" />
@@ -185,7 +187,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
                   {alertStats.highAlerts}
                 </Badge>
               </div>
-              <Progress 
+              <Progress
                 value={alertStats.totalAlerts > 0 ? (alertStats.highAlerts / alertStats.totalAlerts) * 100 : 0}
                 className="h-2 bg-danger/20"
               />
@@ -198,7 +200,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
                   {alertStats.mediumAlerts}
                 </Badge>
               </div>
-              <Progress 
+              <Progress
                 value={alertStats.totalAlerts > 0 ? (alertStats.mediumAlerts / alertStats.totalAlerts) * 100 : 0}
                 className="h-2 bg-warning/20"
               />
@@ -211,7 +213,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
                   {alertStats.lowAlerts}
                 </Badge>
               </div>
-              <Progress 
+              <Progress
                 value={alertStats.totalAlerts > 0 ? (alertStats.lowAlerts / alertStats.totalAlerts) * 100 : 0}
                 className="h-2 bg-success/20"
               />
@@ -231,7 +233,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
               const Icon = epiIcons[epi as keyof typeof epiIcons];
               const numericRate = parseFloat(rate);
               const color = numericRate >= 90 ? 'success' : numericRate >= 70 ? 'warning' : 'danger';
-              
+
               return (
                 <div key={epi} className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -241,24 +243,22 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
                         {epiLabels[epi as keyof typeof epiLabels]}
                       </span>
                     </div>
-                    <Badge 
-                      variant="outline" 
-                      className={`${
-                        color === 'success' ? 'text-success border-success' :
+                    <Badge
+                      variant="outline"
+                      className={`${color === 'success' ? 'text-success border-success' :
                         color === 'warning' ? 'text-warning border-warning' :
-                        'text-danger border-danger'
-                      }`}
+                          'text-danger border-danger'
+                        }`}
                     >
                       {rate}%
                     </Badge>
                   </div>
-                  <Progress 
+                  <Progress
                     value={numericRate}
-                    className={`h-2 ${
-                      color === 'success' ? 'bg-success/20' :
+                    className={`h-2 ${color === 'success' ? 'bg-success/20' :
                       color === 'warning' ? 'bg-warning/20' :
-                      'bg-danger/20'
-                    }`}
+                        'bg-danger/20'
+                      }`}
                   />
                 </div>
               );
@@ -280,7 +280,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(alertStats.missingEPIsCount)
-                .sort(([,a], [,b]) => b - a)
+                .sort(([, a], [, b]) => b - a)
                 .map(([epi, count]) => (
                   <Alert key={epi} className="border-l-4 border-l-danger">
                     <AlertTriangle className="h-4 w-4" />
@@ -321,12 +321,11 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
                 .sort((a, b) => b.timestamp - a.timestamp)
                 .slice(0, 10)
                 .map((alert) => (
-                  <Alert 
-                    key={alert.id} 
-                    className={`border-l-4 ${
-                      alert.severity === 'high' ? 'border-l-danger' :
+                  <Alert
+                    key={alert.id}
+                    className={`border-l-4 ${alert.severity === 'high' ? 'border-l-danger' :
                       alert.severity === 'medium' ? 'border-l-warning' : 'border-l-success'
-                    }`}
+                      }`}
                   >
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
@@ -337,16 +336,15 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
                             EPIs faltando: {alert.missingEPIs.join(', ')}
                           </span>
                         </div>
-                        <Badge 
+                        <Badge
                           variant="outline"
-                          className={`${
-                            alert.severity === 'high' ? 'text-danger border-danger' :
+                          className={`${alert.severity === 'high' ? 'text-danger border-danger' :
                             alert.severity === 'medium' ? 'text-warning border-warning' :
-                            'text-success border-success'
-                          }`}
+                              'text-success border-success'
+                            }`}
                         >
                           {alert.severity === 'high' ? 'Crítico' :
-                           alert.severity === 'medium' ? 'Médio' : 'Baixo'}
+                            alert.severity === 'medium' ? 'Médio' : 'Baixo'}
                         </Badge>
                       </div>
                     </AlertDescription>

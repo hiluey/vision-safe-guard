@@ -177,14 +177,14 @@ export const EPIDetector: React.FC = () => {
     }
 
     // EPIs
-    const epiMapping: Record<string, string> = {
-      'hat': 'hat',
-      'boots': 'boots',
-      'hearing': 'hearing',
-      'goggles': 'glasses',
-      'mask': 'mask',
-      'gloves': 'gloves'
-    };
+const epiMapping: Record<string, string> = {
+  'hat': 'hat',
+  'boots': 'boots',
+  'hearing': 'hearing',
+  'goggles': 'glasses',
+  'mask': 'mask',
+  'gloves': 'gloves'
+};
 
     const detectedEPIClasses = new Set<string>();
 
@@ -207,12 +207,13 @@ export const EPIDetector: React.FC = () => {
           timestamp: Date.now(),
           className
         });
-        detectedEPIClasses.add(className);
+        detectedEPIClasses.add(mappedType);
+
       });
     }
 
-    // Alertas
-    const requiredEPIs = new Set(['mask', 'glasses']);
+    const requiredEPIs = new Set(['mask', 'glasses', 'hearing']);
+
     const missingEPIs = Array.from(requiredEPIs).filter(epi => !detectedEPIClasses.has(epi));
     const personsInFrame = newDetections.filter(d => d.type === 'person');
 
