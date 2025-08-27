@@ -56,10 +56,10 @@ export const EPIDetector: React.FC = () => {
   }, [toast]);
 
   const analyzeVideo = useCallback(async () => {
-    if (!videoFile || !apiToken) {
+    if (!videoFile) {
       toast({
         title: "Configuração incompleta",
-        description: "Selecione um vídeo e configure o token da API",
+        description: "Selecione um vídeo para análise",
         variant: "destructive"
       });
       return;
@@ -69,22 +69,19 @@ export const EPIDetector: React.FC = () => {
     setAnalysisProgress(0);
 
     try {
-      // Simular análise por frames
       const totalFrames = 100; // Será calculado dinamicamente
-      
-      for (let frame = 0; frame < totalFrames; frame += 5) {
-        // Extrair frame do vídeo e converter para base64
+
+      for (let frame = 0; frame < totalFrames; frame += 10) {
+
         const frameData = await extractFrameAsBase64(videoFile, frame);
-        
-        // Chamar APIs de detecção
+
+        // Chamar APIs de detecção **sem passar token**
         const [personDetections, ppeDetections] = await Promise.all([
-          callPersonDetectorAPI(frameData, apiToken),
-          callPPEDetectorAPI(frameData, apiToken)
+          callPersonDetectorAPI(frameData),
+          callPPEDetectorAPI(frameData)
         ]);
 
-        // Processar detecções e gerar alertas
         processDetections(personDetections, ppeDetections, frame);
-        
         setAnalysisProgress((frame / totalFrames) * 100);
       }
 
@@ -104,14 +101,14 @@ export const EPIDetector: React.FC = () => {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [videoFile, apiToken, alerts.length, toast]);
+  }, [videoFile, alerts.length, toast]);
 
   const extractFrameAsBase64 = async (video: File, frameNumber: number): Promise<string> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const videoElement = document.createElement('video');
-      
+
       videoElement.onloadeddata = () => {
         canvas.width = videoElement.videoWidth;
         canvas.height = videoElement.videoHeight;
@@ -128,128 +125,132 @@ export const EPIDetector: React.FC = () => {
     });
   };
 
-  const callPersonDetectorAPI = async (imageBase64: string, token: string) => {
-    const response = await fetch(
-      'https://adb-367534349465137.17.azuredatabricks.net/serving-endpoints/person-detector/invocations',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          dataframe_records: [{ image_b64: imageBase64 }]
-        })
-      }
-    );
+  const callPersonDetectorAPI = async (imageBase64: string) => {
+    const response = await fetch('http://localhost:3001/api/person-detector', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        dataframe_records: [{ image_b64: imageBase64 }]
+      })
+    });
     return response.json();
   };
 
-  const callPPEDetectorAPI = async (imageBase64: string, token: string) => {
-    const response = await fetch(
-      'https://adb-367534349465137.17.azuredatabricks.net/serving-endpoints/ppe_senac_detector/invocations',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          dataframe_records: [{ image_b64: imageBase64 }]
-        })
-      }
-    );
+  const callPPEDetectorAPI = async (imageBase64: string) => {
+    const response = await fetch('http://localhost:3001/api/ppe-detector', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        dataframe_records: [{ image_b64: imageBase64 }]
+      })
+    });
     return response.json();
   };
+
+
 
   const processDetections = (personData: any, ppeData: any, frame: number) => {
     const newDetections: Detection[] = [];
     const frameAlerts: Alert[] = [];
-    
-    // Processar detecções de pessoas
-    if (personData.predictions && personData.predictions[0] && personData.predictions[0].persons) {
+    const MIN_CONFIDENCE = 0.5;
+
+    // Pessoas
+    if (personData.predictions?.[0]?.persons) {
       personData.predictions[0].persons.forEach((person: any, index: number) => {
-        const detection: Detection = {
+        if ((person.score || 0) < MIN_CONFIDENCE) return;
+        newDetections.push({
           id: `person_${frame}_${index}`,
           type: 'person',
-          confidence: person.score || person.confidence || 0,
-          x: person.box ? person.box[0] : person.x || 0,
-          y: person.box ? person.box[1] : person.y || 0,
-          w: person.box ? (person.box[2] - person.box[0]) : person.w || 0,
-          h: person.box ? (person.box[3] - person.box[1]) : person.h || 0,
+          confidence: person.score || 0,
+          x: person.box?.[0] ?? person.x ?? 0,
+          y: person.box?.[1] ?? person.y ?? 0,
+          w: person.box ? person.box[2] - person.box[0] : person.w ?? 0,
+          h: person.box ? person.box[3] - person.box[1] : person.h ?? 0,
           frame,
           timestamp: Date.now()
-        };
-        newDetections.push(detection);
+        });
       });
     }
 
-    // Processar detecções de EPIs com mapeamento
+    // EPIs
     const epiMapping: Record<string, string> = {
       'hat': 'hat',
-      'boots': 'boots', 
+      'boots': 'boots',
       'hearing': 'hearing',
-      'glasses': 'glasses', // Mapeado para "Goggles" no relatório
-      'mask': 'mask',       // Mapeado para "Mask" no relatório
-      'gloves': 'gloves'    // Mapeado para "Gloves" no relatório
+      'goggles': 'glasses',
+      'mask': 'mask',
+      'gloves': 'gloves'
     };
 
     const detectedEPIClasses = new Set<string>();
-    
-    if (ppeData.predictions && ppeData.predictions[0] && ppeData.predictions[0].ppe_detections) {
+
+    if (ppeData.predictions?.[0]?.ppe_detections) {
       ppeData.predictions[0].ppe_detections.forEach((epi: any, index: number) => {
         const className = epi.class_name?.toLowerCase();
         const mappedType = epiMapping[className];
-        
-        if (mappedType && className !== 'person') {
-          const box = epi.box_model_input_coords || epi.box || [0, 0, 0, 0];
-          const detection: Detection = {
-            id: `epi_${frame}_${index}`,
-            type: mappedType as Detection['type'],
-            confidence: epi.score || epi.confidence || 0,
-            x: Array.isArray(box) ? box[0] : 0,
-            y: Array.isArray(box) ? box[1] : 0, 
-            w: Array.isArray(box) ? (box[2] - box[0]) : 0,
-            h: Array.isArray(box) ? (box[3] - box[1]) : 0,
-            frame,
-            timestamp: Date.now(),
-            className: epi.class_name
-          };
-          newDetections.push(detection);
-          detectedEPIClasses.add(className);
-        }
-      });
-    }
+        if (!mappedType || (epi.score || 0) < MIN_CONFIDENCE) return;
 
-    // Verificar EPIs obrigatórios (conforme documento: Mask e Goggles)
-    const requiredEPIs = new Set(['mask', 'glasses']); // glasses é mapeado para "Goggles"
-    const missingEPIs = Array.from(requiredEPIs).filter(epi => !detectedEPIClasses.has(epi));
-    
-    // Gerar alertas se há pessoas detectadas e EPIs faltando
-    const personsInFrame = newDetections.filter(d => d.type === 'person');
-    if (personsInFrame.length > 0 && missingEPIs.length > 0) {
-      personsInFrame.forEach((person, personIndex) => {
-        const alert: Alert = {
-          id: `alert_${frame}_${personIndex}`,
-          personId: person.id,
-          missingEPIs: missingEPIs.map(epi => {
-            // Mapear para nomes mais amigáveis
-            if (epi === 'mask') return 'Máscara';
-            if (epi === 'glasses') return 'Óculos de Proteção';
-            return epi;
-          }),
-          severity: missingEPIs.length >= 2 ? 'high' : missingEPIs.length === 1 ? 'medium' : 'low',
+        const box = epi.box_model_input_coords || epi.box || [0, 0, 0, 0];
+        newDetections.push({
+          id: `epi_${frame}_${index}`,
+          type: mappedType as Detection['type'],
+          confidence: epi.score || 0,
+          x: box[0],
+          y: box[1],
+          w: box[2] - box[0],
+          h: box[3] - box[1],
           frame,
-          timestamp: Date.now()
-        };
-        frameAlerts.push(alert);
+          timestamp: Date.now(),
+          className
+        });
+        detectedEPIClasses.add(className);
       });
     }
 
-    // Atualizar estados
-    setDetections(prev => [...prev, ...newDetections]);
+    // Alertas
+    const requiredEPIs = new Set(['mask', 'glasses']);
+    const missingEPIs = Array.from(requiredEPIs).filter(epi => !detectedEPIClasses.has(epi));
+    const personsInFrame = newDetections.filter(d => d.type === 'person');
+
+    personsInFrame.forEach((person, personIndex) => {
+      if (missingEPIs.length === 0) return;
+      frameAlerts.push({
+        id: `alert_${frame}_${personIndex}`,
+        personId: person.id,
+        missingEPIs: missingEPIs.map(epi => epi === 'mask' ? 'Máscara' : 'Óculos de Proteção'),
+        severity: missingEPIs.length >= 2 ? 'high' : 'medium',
+        frame,
+        timestamp: Date.now()
+      });
+    });
+
+    // Atualiza estado
+    const filterDuplicatePersons = (detections: Detection[]) => {
+      const persons = detections.filter(d => d.type === 'person');
+      const filtered: Detection[] = [];
+
+      persons.forEach(p => {
+        const overlap = filtered.some(f => {
+          const xOverlap = Math.max(0, Math.min(f.x + f.w, p.x + p.w) - Math.max(f.x, p.x));
+          const yOverlap = Math.max(0, Math.min(f.y + f.h, p.y + p.h) - Math.max(f.y, p.y));
+          const iou = (xOverlap * yOverlap) / (p.w * p.h);
+          return iou > 0.7;
+        });
+        if (!overlap) filtered.push(p);
+      });
+
+      const nonPersons = detections.filter(d => d.type !== 'person');
+      return [...filtered, ...nonPersons];
+    };
+
+    setDetections(prev => filterDuplicatePersons([...prev, ...newDetections]));
     setAlerts(prev => [...prev, ...frameAlerts]);
   };
+
 
   const getStatusSummary = () => {
     const highAlerts = alerts.filter(a => a.severity === 'high').length;
@@ -273,7 +274,7 @@ export const EPIDetector: React.FC = () => {
               <p className="text-muted-foreground">Sistema de Monitoramento de Equipamentos de Proteção Individual</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-success border-success">
               {detections.length} Detecções
@@ -383,10 +384,10 @@ export const EPIDetector: React.FC = () => {
                           Vídeo carregado: {videoFile.name}
                         </AlertDescription>
                       </Alert>
-                      <Button 
-                        onClick={analyzeVideo} 
+                      <Button
+                        onClick={analyzeVideo}
                         disabled={isAnalyzing || !apiToken}
-                        variant="hero" 
+                        variant="hero"
                         className="w-full"
                       >
                         {isAnalyzing ? `Analisando... ${analysisProgress.toFixed(0)}%` : 'Iniciar Análise'}
@@ -402,7 +403,7 @@ export const EPIDetector: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   {videoFile ? (
-                    <VideoPlayer 
+                    <VideoPlayer
                       videoFile={videoFile}
                       detections={detections}
                       currentFrame={currentFrame}
@@ -439,10 +440,9 @@ export const EPIDetector: React.FC = () => {
                 ) : (
                   <div className="space-y-2">
                     {alerts.map((alert) => (
-                      <Alert key={alert.id} className={`border-l-4 ${
-                        alert.severity === 'high' ? 'border-l-danger' :
+                      <Alert key={alert.id} className={`border-l-4 ${alert.severity === 'high' ? 'border-l-danger' :
                         alert.severity === 'medium' ? 'border-l-warning' : 'border-l-success'
-                      }`}>
+                        }`}>
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
                           Frame {alert.frame}: EPIs faltando - {alert.missingEPIs.join(', ')}
