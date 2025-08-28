@@ -10,6 +10,8 @@ import { APIConfig } from './APIConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, PlayCircle, Settings, BarChart3, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { RealtimeDetector } from "./RealtimeDetector";
+import { ComplianceRatesCard } from "./ComplianceRatesCard";
 
 interface Detection {
   id: string;
@@ -21,7 +23,7 @@ interface Detection {
   h: number;
   frame: number;
   timestamp: number;
-  className?: string; // Nome original da classe da API
+  className?: string;
 }
 
 interface Alert {
@@ -38,7 +40,7 @@ export const EPIDetector: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [detections, setDetections] = useState<Detection[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [apiToken, setApiToken] = useState<string>('dapi4a5d76e7aac9b8727cc7a2a771f104be'); // Token padrão do documento
+  const [apiToken, setApiToken] = useState<string>('dapi4a5d76e7aac9b8727cc7a2a771f104be');
   const [currentFrame, setCurrentFrame] = useState(0);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const { toast } = useToast();
@@ -175,16 +177,38 @@ export const EPIDetector: React.FC = () => {
         });
       });
     }
+    const getComplianceRates = (detections: Detection[]) => {
+      const personDetections = detections.filter(d => d.type === 'person').length;
+      if (personDetections === 0) return {};
+
+      const stats = {
+        hat: detections.filter(d => d.type === 'hat').length,
+        mask: detections.filter(d => d.type === 'mask').length,
+        gloves: detections.filter(d => d.type === 'gloves').length,
+        glasses: detections.filter(d => d.type === 'glasses').length,
+        boots: detections.filter(d => d.type === 'boots').length,
+        hearing: detections.filter(d => d.type === 'hearing').length,
+      };
+
+      return {
+        hat: ((stats.hat / personDetections) * 100).toFixed(1),
+        mask: ((stats.mask / personDetections) * 100).toFixed(1),
+        gloves: ((stats.gloves / personDetections) * 100).toFixed(1),
+        glasses: ((stats.glasses / personDetections) * 100).toFixed(1),
+        boots: ((stats.boots / personDetections) * 100).toFixed(1),
+        hearing: ((stats.hearing / personDetections) * 100).toFixed(1),
+      };
+    };
 
     // EPIs
-const epiMapping: Record<string, string> = {
-  'hat': 'hat',
-  'boots': 'boots',
-  'hearing': 'hearing',
-  'goggles': 'glasses',
-  'mask': 'mask',
-  'gloves': 'gloves'
-};
+    const epiMapping: Record<string, string> = {
+      'hat': 'hat',
+      'boots': 'boots',
+      'hearing': 'hearing',
+      'goggles': 'glasses',
+      'mask': 'mask',
+      'gloves': 'gloves'
+    };
 
     const detectedEPIClasses = new Set<string>();
 
@@ -264,199 +288,192 @@ const epiMapping: Record<string, string> = {
   const { highAlerts, mediumAlerts, lowAlerts } = getStatusSummary();
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Shield className="h-8 w-8 text-primary" />
+  <div className="min-h-screen bg-background p-6">
+  <div className="max-w-7xl mx-auto space-y-6">
+    {/* Header */}
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <Shield className="h-7 w-7 text-primary" />
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Detector de EPIs</h1>
+          <p className="text-sm text-muted-foreground">
+            Monitoramento de Equipamentos de Proteção Individual
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Badge variant="outline" className="text-success border-success text-sm px-2 py-1">
+          {detections.length} Detecções
+        </Badge>
+        {highAlerts > 0 && (
+          <Badge variant="outline" className="text-danger border-danger text-sm px-2 py-1">
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            {highAlerts} Críticos
+          </Badge>
+        )}
+      </div>
+    </div>
+
+    {/* Status Cards */}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {[
+        { label: "Alertas Críticos", value: highAlerts, color: "danger", icon: AlertTriangle },
+        { label: "Alertas Médios", value: mediumAlerts, color: "warning", icon: AlertTriangle },
+        { label: "Alertas Baixos", value: lowAlerts, color: "success", icon: Shield },
+        { label: "Detecções Totais", value: detections.length, color: "primary", icon: BarChart3 },
+      ].map((item, idx) => (
+        <Card key={idx} className="h-32">
+          <CardContent className="p-3 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Detector de EPIs</h1>
-              <p className="text-muted-foreground">Sistema de Monitoramento de Equipamentos de Proteção Individual</p>
+              <p className="text-xs text-muted-foreground">{item.label}</p>
+              <p className={`text-xl font-bold text-${item.color}`}>{item.value}</p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-success border-success">
-              {detections.length} Detecções
-            </Badge>
-            {highAlerts > 0 && (
-              <Badge variant="outline" className="text-danger border-danger">
-                <AlertTriangle className="h-3 w-3 mr-1" />
-                {highAlerts} Alertas Críticos
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Alertas Críticos</p>
-                  <p className="text-2xl font-bold text-danger">{highAlerts}</p>
-                </div>
-                <div className="h-8 w-8 bg-danger/10 rounded-lg flex items-center justify-center">
-                  <AlertTriangle className="h-4 w-4 text-danger" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Alertas Médios</p>
-                  <p className="text-2xl font-bold text-warning">{mediumAlerts}</p>
-                </div>
-                <div className="h-8 w-8 bg-warning/10 rounded-lg flex items-center justify-center">
-                  <AlertTriangle className="h-4 w-4 text-warning" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Alertas Baixos</p>
-                  <p className="text-2xl font-bold text-success">{lowAlerts}</p>
-                </div>
-                <div className="h-8 w-8 bg-success/10 rounded-lg flex items-center justify-center">
-                  <Shield className="h-4 w-4 text-success" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Detecções Totais</p>
-                  <p className="text-2xl font-bold text-primary">{detections.length}</p>
-                </div>
-                <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <Tabs defaultValue="analysis" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="analysis" className="flex items-center gap-2">
-              <PlayCircle className="h-4 w-4" />
-              Análise
-            </TabsTrigger>
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Dashboard
-            </TabsTrigger>
-            {/* <TabsTrigger value="config" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Configuração
-            </TabsTrigger>
-            <TabsTrigger value="alerts" className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Alertas
-            </TabsTrigger>*/}
-          </TabsList>
-
-          <TabsContent value="analysis" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Upload de Vídeo</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <VideoUpload onVideoUpload={handleVideoUpload} />
-                  {videoFile && (
-                    <div className="mt-4 space-y-4">
-                      <Alert>
-                        <Shield className="h-4 w-4" />
-                        <AlertDescription>
-                          Vídeo carregado: {videoFile.name}
-                        </AlertDescription>
-                      </Alert>
-                      <Button
-                        onClick={analyzeVideo}
-                        disabled={isAnalyzing || !apiToken}
-                        variant="hero"
-                        className="w-full"
-                      >
-                        {isAnalyzing ? `Analisando... ${analysisProgress.toFixed(0)}%` : 'Iniciar Análise'}
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Visualização do Vídeo</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {videoFile ? (
-                    <VideoPlayer
-                      videoFile={videoFile}
-                      detections={detections}
-                      currentFrame={currentFrame}
-                      onFrameChange={setCurrentFrame}
-                    />
-                  ) : (
-                    <div className="h-64 border-2 border-dashed border-border rounded-lg flex items-center justify-center">
-                      <p className="text-muted-foreground">Carregue um vídeo para visualizar</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+            <div
+              className={`h-10 w-10 bg-${item.color}/10 rounded-full flex items-center justify-center`}
+            >
+              <item.icon className={`h-5 w-5 text-${item.color}`} />
             </div>
-          </TabsContent>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
 
-          <TabsContent value="dashboard">
-            <AlertDashboard alerts={alerts} detections={detections} />
-          </TabsContent>
+    {/* Main Content */}
+    <Tabs defaultValue="analysis" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="realtime" className="flex items-center gap-2">
+          <PlayCircle className="h-4 w-4" />
+          Tempo Real
+        </TabsTrigger>
+        <TabsTrigger value="analysis" className="flex items-center gap-2">
+          <PlayCircle className="h-4 w-4" />
+          Vídeo
+        </TabsTrigger>
+        <TabsTrigger value="dashboard" className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4" />
+          Dashboard
+        </TabsTrigger>
+      </TabsList>
 
-          <TabsContent value="config">
-            <APIConfig apiToken={apiToken} onTokenChange={setApiToken} />
-          </TabsContent>
-
-          <TabsContent value="alerts">
-            <Card>
-              <CardHeader>
-                <CardTitle>Histórico de Alertas</CardTitle>
+      {/* Análise em vídeo */}
+      <TabsContent value="analysis" className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 space-y-4">
+            <Card className="h-49">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Upload de Vídeo</CardTitle>
               </CardHeader>
-              <CardContent>
-                {alerts.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">
-                    Nenhum alerta encontrado. Execute uma análise primeiro.
-                  </p>
-                ) : (
+              <CardContent className="flex flex-col h-full space-y-2">
+                <VideoUpload onVideoUpload={handleVideoUpload} />
+                {videoFile && (
                   <div className="space-y-2">
-                    {alerts.map((alert) => (
-                      <Alert key={alert.id} className={`border-l-4 ${alert.severity === 'high' ? 'border-l-danger' :
-                        alert.severity === 'medium' ? 'border-l-warning' : 'border-l-success'
-                        }`}>
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertDescription>
-                          Frame {alert.frame}: EPIs faltando - {alert.missingEPIs.join(', ')}
-                        </AlertDescription>
-                      </Alert>
-                    ))}
+                    <Alert className="text-sm p-2">
+                      <Shield className="h-4 w-4" />
+                      <AlertDescription>Vídeo carregado: {videoFile.name}</AlertDescription>
+                    </Alert>
+                    <Button
+                      onClick={analyzeVideo}
+                      disabled={isAnalyzing || !apiToken}
+                      variant="hero"
+                      className="w-full py-1"
+                    >
+                      {isAnalyzing
+                        ? `Analisando... ${analysisProgress.toFixed(0)}%`
+                        : "Iniciar Análise"}
+                    </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
+
+            <Card className="h-68">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Visualização</CardTitle>
+              </CardHeader>
+              <CardContent className="h-full">
+                {videoFile ? (
+                  <VideoPlayer
+                    videoFile={videoFile}
+                    detections={detections}
+                    currentFrame={currentFrame}
+                    onFrameChange={setCurrentFrame}
+                  />
+                ) : (
+                  <div className="h-full border-2 border-dashed border-border rounded-lg flex items-center justify-center">
+                    <p className="text-muted-foreground text-sm">
+                      Carregue um vídeo para visualizar
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <ComplianceRatesCard detections={detections} alerts={alerts} />
+        </div>
+      </TabsContent>
+
+      {/* Dashboard */}
+      <TabsContent value="dashboard">
+        <AlertDashboard alerts={alerts} detections={detections} />
+      </TabsContent>
+
+      {/* Tempo Real */}
+      <TabsContent value="realtime" className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <RealtimeDetector
+            callPersonDetectorAPI={callPersonDetectorAPI}
+            callPPEDetectorAPI={callPPEDetectorAPI}
+            processDetections={processDetections}
+          />
+          <ComplianceRatesCard detections={detections} alerts={alerts} />
+        </div>
+      </TabsContent>
+
+      {/* Configuração */}
+      <TabsContent value="config">
+        <APIConfig apiToken={apiToken} onTokenChange={setApiToken} />
+      </TabsContent>
+
+      {/* Histórico de Alertas */}
+      <TabsContent value="alerts">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Histórico de Alertas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {alerts.length === 0 ? (
+              <p className="text-muted-foreground text-center py-6 text-sm">
+                Nenhum alerta encontrado. Execute uma análise primeiro.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {alerts.map((alert) => (
+                  <Alert
+                    key={alert.id}
+                    className={`border-l-4 ${
+                      alert.severity === "high"
+                        ? "border-l-danger"
+                        : alert.severity === "medium"
+                        ? "border-l-warning"
+                        : "border-l-success"
+                    }`}
+                  >
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      Frame {alert.frame}: EPIs faltando - {alert.missingEPIs.join(", ")}
+                    </AlertDescription>
+                  </Alert>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
+  </div>
+</div>
+
   );
 };

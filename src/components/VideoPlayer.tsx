@@ -43,7 +43,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (videoFile && videoRef.current) {
       const url = URL.createObjectURL(videoFile);
       videoRef.current.src = url;
-      
+
       return () => URL.revokeObjectURL(url);
     }
   }, [videoFile]);
@@ -91,14 +91,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Filtrar detecções para o frame atual
-    const currentDetections = detections.filter(d => 
+    const currentDetections = detections.filter(d =>
       Math.abs(d.frame - currentFrame) <= 2 // Tolerância de 2 frames
     );
 
     // Desenhar bounding boxes
     currentDetections.forEach(detection => {
       const { type, confidence, x, y, w, h } = detection;
-      
+
       // Cores por tipo de detecção (seguindo os EPIs do documento)
       const colors = {
         person: '#3b82f6',    // blue
@@ -111,16 +111,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       };
 
       const color = colors[type] || '#6b7280';
-      
+
       // Desenhar retângulo
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.strokeRect(x, y, w, h);
-      
+
       // Desenhar rótulo
       ctx.fillStyle = color;
       ctx.fillRect(x, y - 20, Math.max(w, 80), 20);
-      
+
       ctx.fillStyle = 'white';
       ctx.font = '12px sans-serif';
       ctx.fillText(`${type} (${(confidence * 100).toFixed(0)}%)`, x + 2, y - 6);
@@ -183,7 +183,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const getCurrentDetections = () => {
-    return detections.filter(d => 
+    return detections.filter(d =>
       Math.abs(d.frame - currentFrame) <= 2
     );
   };
@@ -191,42 +191,32 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const currentDetections = getCurrentDetections();
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Player de Vídeo</CardTitle>
-          <div className="flex items-center gap-2">
-            {currentDetections.length > 0 && (
-              <Badge variant="outline" className="text-primary">
-                {currentDetections.length} detecções
-              </Badge>
-            )}
+    <Card className="overflow-hidden space-y-2">
+
+      <CardContent className="space-y-3">
+        <div className="mt-4"></div> 
+        {/* Video Container */}
+        <div className="flex justify-center items-center">
+          <div className="relative bg-black rounded-lg overflow-hidden aspect-video w-[40%]">
+            <video
+              ref={videoRef}
+              className="w-full h-full object-contain"
+              preload="metadata"
+            />
+
+            {/* Overlay Canvas for Detections */}
+            <canvas
+              ref={canvasRef}
+              className="absolute top-0 left-0 w-full h-full pointer-events-none"
+              width={640}
+              height={360}
+            />
           </div>
         </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {/* Video Container */}
-        <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-          <video
-            ref={videoRef}
-            className="w-full h-full object-contain"
-            preload="metadata"
-          />
-          
-          {/* Overlay Canvas for Detections */}
-          <canvas
-            ref={canvasRef}
-            className="absolute top-0 left-0 w-full h-full pointer-events-none"
-            width={640}
-            height={360}
-          />
-        </div>
-
         {/* Controls */}
-        <div className="space-y-3">
+        <div className="space-y-1">
           {/* Progress Bar */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Slider
               value={[currentTime]}
               max={duration || 100}
@@ -242,7 +232,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
           {/* Control Buttons */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-">
               <Button
                 variant="ghost"
                 size="sm"
@@ -250,7 +240,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
               >
                 <SkipBack className="h-4 w-4" />
               </Button>
-              
+
               <Button
                 variant="default"
                 size="sm"
@@ -262,7 +252,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   <Play className="h-4 w-4" />
                 )}
               </Button>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -304,13 +294,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 <Badge
                   key={detection.id}
                   variant="outline"
-                  className={`text-xs ${
-                    detection.type === 'person' ? 'border-primary text-primary' :
-                    detection.type === 'hat' ? 'border-success text-success' :
-                    detection.type === 'mask' ? 'border-warning text-warning' :
-                    detection.type === 'glasses' ? 'border-primary text-primary' :
-                    'border-muted-foreground text-muted-foreground'
-                  }`}
+                  className={`text-xs ${detection.type === 'person' ? 'border-primary text-primary' :
+                      detection.type === 'hat' ? 'border-success text-success' :
+                        detection.type === 'mask' ? 'border-warning text-warning' :
+                          detection.type === 'glasses' ? 'border-primary text-primary' :
+                            'border-muted-foreground text-muted-foreground'
+                    }`}
                 >
                   {detection.type} ({(detection.confidence * 100).toFixed(0)}%)
                 </Badge>
