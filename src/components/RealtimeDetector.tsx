@@ -102,40 +102,38 @@ export const RealtimeDetector: React.FC<RealtimeDetectorProps> = ({
   }, []);
 
   return (
-<div className="max-w-2xl mx-auto py-15 px-6 space-y-10 bg-white shadow-xl rounded-2xl border border-gray-200">
-<div className="text-center space-y-3">
-  {/* Ícone delicado no topo */}
-  <div className="flex justify-center mt-6">
-    <svg
-      className="w-8 h-8 text-indigo-400 "
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 8c-1.333 0-2 .667-2 2s.667 2 2 2 2-.667 2-2-.667-2-2-2zm0-4v1m0 14v1m8-8h1M3 12H2m15.364-6.364l.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707"
-      />
-    </svg>
+<div className="max-w-3xl mx-auto py-20 px-8 space-y-10 bg-white shadow-xl rounded-2xl border border-gray-200">
+  <div className="text-center">
+    {/* Ícone delicado no topo */}
+    <div className="flex justify-center">
+      <svg
+        className="w-8 h-8 text-indigo-400 "
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 8c-1.333 0-2 .667-2 2s.667 2 2 2 2-.667 2-2-.667-2-2-2zm0-4v1m0 14v1m8-8h1M3 12H2m15.364-6.364l.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707"
+        />
+      </svg>
+    </div>
+
+    {/* Título elegante menor */}
+    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">
+      Análise em Tempo Real
+    </h2>
+
+    {/* Parágrafo menor */}
+    <p className="text-gray-600 text-center text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+      A câmera será ligada automaticamente. <span className="font-medium text-indigo-500">Clique no botão abaixo</span> para iniciar a análise e acompanhar os resultados em tempo real.
+    </p>
+
+    {/* Linha decorativa delicada menor */}
+    <div className="mx-auto w-16 h-1 bg-indigo-200 rounded-full mt-1.5"></div>
   </div>
-
-  {/* Título elegante menor */}
-  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">
-    Análise em Tempo Real
-  </h2>
-
-  {/* Parágrafo menor */}
-  <p className="text-gray-600 text-center text-sm sm:text-base max-w-md mx-auto leading-relaxed">
-    A câmera será ligada automaticamente. <span className="font-medium text-indigo-500">Clique no botão abaixo</span> para iniciar a análise e acompanhar os resultados em tempo real.
-  </p>
-
-  {/* Linha decorativa delicada menor */}
-  <div className="mx-auto w-16 h-1 bg-indigo-200 rounded-full mt-1.5"></div>
-</div>
-
-
 
   <video
     ref={videoRef}
@@ -144,39 +142,34 @@ export const RealtimeDetector: React.FC<RealtimeDetectorProps> = ({
     muted
   />
 
-<button
-  onClick={isRealtime ? stopRealtime : startRealtime}
-  disabled={!isCameraOn}
-  className={`
-    w-full
-    py-1.5
-    rounded-2xl                   /* bordas suaves e delicadas */
-    bg-indigo-50                  /* fundo pastel elegante */
-    text-indigo-700               /* cor da fonte sofisticada */
-    font-medium
-    text-lg
-    border border-indigo-100      /* borda leve e harmoniosa */
-    shadow-sm                     /* sombra mínima */
-    hover:bg-indigo-100           /* hover muito suave */
-    hover:shadow                     /* leve destaque no hover */
-    focus:outline-none
-    focus:ring-1
-    focus:ring-indigo-200         /* foco delicado */
-    transition
-    duration-200
-    ease-in-out
-    disabled:opacity-50
-    disabled:cursor-not-allowed
-  `}
->
-  {isRealtime ? "Parar Análise" : "Iniciar Análise"}
-</button>
-
-
-
-
+  <button
+    onClick={isRealtime ? stopRealtime : startRealtime}
+    disabled={!isCameraOn}
+    className={`
+      w-full
+      py-1.5
+      rounded-2xl
+      bg-indigo-50
+      text-indigo-700
+      font-medium
+      text-lg
+      border border-indigo-100
+      shadow-sm
+      hover:bg-indigo-100
+      hover:shadow
+      focus:outline-none
+      focus:ring-1
+      focus:ring-indigo-200
+      transition
+      duration-200
+      ease-in-out
+      disabled:opacity-50
+      disabled:cursor-not-allowed
+    `}
+  >
+    {isRealtime ? "Parar Análise" : "Iniciar Análise"}
+  </button>
 </div>
-
 
   );
 };
