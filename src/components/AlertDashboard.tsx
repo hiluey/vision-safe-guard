@@ -122,19 +122,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
     <div className="space-y-6">
       {/* Resumo Geral */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pessoas Detectadas</p>
-                <p className="text-3xl font-bold text-primary">{stats.personDetections}</p>
-              </div>
-              <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
 
         <Card>
           <CardContent className="p-6">
