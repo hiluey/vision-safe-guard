@@ -36,21 +36,15 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
   // Estatísticas das detecções (seguindo os EPIs do documento)
   const getDetectionStats = () => {
     const personDetections = detections.filter(d => d.type === 'person').length;
-    const hatDetections = detections.filter(d => d.type === 'hat').length;
     const maskDetections = detections.filter(d => d.type === 'mask').length;
     const glovesDetections = detections.filter(d => d.type === 'gloves').length;
     const glassesDetections = detections.filter(d => d.type === 'glasses').length;
-    const bootsDetections = detections.filter(d => d.type === 'boots').length;
-    const hearingDetections = detections.filter(d => d.type === 'hearing').length;
 
     return {
       personDetections,
-      hatDetections,
       maskDetections,
       glovesDetections,
-      glassesDetections,
-      bootsDetections,
-      hearingDetections
+      glassesDetections
     };
   };
 
@@ -86,12 +80,9 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
     if (personDetections === 0) return {};
 
     return {
-      hat: Math.min(100, (stats.hatDetections / personDetections) * 100).toFixed(1),
       mask: Math.min(100, (stats.maskDetections / personDetections) * 100).toFixed(1),
       gloves: Math.min(100, (stats.glovesDetections / personDetections) * 100).toFixed(1),
-      glasses: Math.min(100, (stats.glassesDetections / personDetections) * 100).toFixed(1),
-      boots: Math.min(100, (stats.bootsDetections / personDetections) * 100).toFixed(1),
-      hearing: Math.min(100, (stats.hearingDetections / personDetections) * 100).toFixed(1)
+      glasses: Math.min(100, (stats.glassesDetections / personDetections) * 100).toFixed(1)
     };
   };
 
@@ -101,12 +92,10 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
   const complianceRates = getComplianceRates();
 
   const epiLabels = {
-    hat: 'Capacete',
     mask: 'Máscara',
     gloves: 'Luvas',
     glasses: 'Óculos de Proteção',
-    boots: 'Botas de Segurança',
-    hearing: 'Proteção Auditiva'
+
   };
 
   const epiIcons = {
@@ -122,7 +111,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
     <div className="space-y-6">
       {/* Resumo Geral */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
+
 
         <Card>
           <CardContent className="p-6">
@@ -256,7 +245,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
       </div>
 
       {/* EPIs Mais Faltantes */}
-       {/*<Card>
+      {/*<Card>
         <CardHeader>
           <CardTitle>EPIs Mais Faltantes</CardTitle>
         </CardHeader>

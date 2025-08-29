@@ -169,14 +169,12 @@ export const EPIDetector: React.FC = () => {
 
     // EPIs
     const epiMapping: Record<string, string> = {
-      'hat': 'hat',
-      'boots': 'boots',
-      'hearing': 'hearing',
       'goggles': 'glasses',
       'mask': 'mask',
       'gloves': 'gloves'
     };
 
+    // Detectados
     const detectedEPIClasses = new Set<string>();
 
     if (ppeData.predictions?.[0]?.ppe_detections) {
@@ -202,8 +200,10 @@ export const EPIDetector: React.FC = () => {
       });
     }
 
-    const requiredEPIs = new Set(['mask', 'glasses', 'hearing']);
+    // Lista de EPIs obrigatórios para alertas
+    const requiredEPIs = new Set(['mask', 'glasses']); // removido 'hearing'
     const missingEPIs = Array.from(requiredEPIs).filter(epi => !detectedEPIClasses.has(epi));
+
     const personsInFrame = newDetections.filter(d => d.type === 'person');
 
     personsInFrame.forEach((person, personIndex) => {
@@ -272,19 +272,19 @@ export const EPIDetector: React.FC = () => {
             </div>
           </div>
 
-<Card className="w-80">
-  <CardContent className="p-3">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm text-muted-foreground">Pessoas Detectadas</p>
-        <p className="text-3xl font-bold text-primary">{personDetections}</p>
-      </div>
-      <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
-        <Users className="h-6 w-6 text-primary" />
-      </div>
-    </div>
-  </CardContent>
-</Card>
+          <Card className="w-80">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Pessoas Detectadas</p>
+                  <p className="text-3xl font-bold text-primary">{personDetections}</p>
+                </div>
+                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
 
           <div className="flex items-center gap-2">
@@ -300,14 +300,11 @@ export const EPIDetector: React.FC = () => {
         </div>
 
         {/* Cards de EPIs */}
-        <div className="flex flex-nowrap gap-3 justify-between p-3 overflow-x-auto">
+        <div className="flex flex-nowrap gap-3 justify-between p-1 overflow-x-auto">
           {[
-            { label: 'Capacete', desc: 'Protege a cabeça contra impactos', icon: <HardHat className="h-5 w-5 text-primary" />, color: 'primary' },
             { label: 'Máscara', desc: 'Protege contra poeira e agentes químicos', icon: <Shield className="h-5 w-5 text-success" />, color: 'success' },
-            { label: 'Botas', desc: 'Protegem os pés contra impactos e escorregões', icon: <Shield className="h-5 w-5 text-primary" />, color: 'primary' },
             { label: 'Luvas', desc: 'Protegem as mãos contra cortes e químicos', icon: <Shield className="h-5 w-5 text-success" />, color: 'success' },
             { label: 'Óculos de Proteção', desc: 'Protegem os olhos contra partículas e produtos químicos', icon: <Eye className="h-5 w-5 text-warning" />, color: 'warning' },
-            { label: 'Protetor Auricular', desc: 'Protege a audição em ambientes ruidosos', icon: <Volume className="h-5 w-5 text-danger" />, color: 'danger' },
           ].map((epi, index) => (
             <Card key={index} className="h-44 w-48 flex-shrink-0">
               <CardContent className="p-3 flex items-center justify-between">

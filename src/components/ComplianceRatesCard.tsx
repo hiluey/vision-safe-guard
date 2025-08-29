@@ -23,36 +23,31 @@ interface ComplianceRatesCardProps {
 }
 
 export const ComplianceRatesCard: React.FC<ComplianceRatesCardProps> = ({ detections, alerts, title }) => {
-  const getDetectionStats = () => {
-    const personDetections = detections.filter(d => d.type === 'person').length;
-    const hatDetections = detections.filter(d => d.type === 'hat').length;
-    const maskDetections = detections.filter(d => d.type === 'mask').length;
-    const glovesDetections = detections.filter(d => d.type === 'gloves').length;
-    const glassesDetections = detections.filter(d => d.type === 'glasses').length;
-    const bootsDetections = detections.filter(d => d.type === 'boots').length;
-    const hearingDetections = detections.filter(d => d.type === 'hearing').length;
+const getDetectionStats = () => {
+  const personDetections = detections.filter(d => d.type === 'person').length;
+  const maskDetections = detections.filter(d => d.type === 'mask').length;
+  const glovesDetections = detections.filter(d => d.type === 'gloves').length;
+  const glassesDetections = detections.filter(d => d.type === 'glasses').length;
 
-    return { personDetections, hatDetections, maskDetections, glovesDetections, glassesDetections, bootsDetections, hearingDetections };
-  };
+  return { personDetections, maskDetections, glovesDetections, glassesDetections };
+};
+
 
   const getComplianceRates = () => {
     const stats = getDetectionStats();
     const { personDetections } = stats;
     if (personDetections === 0) return {};
     return {
-      hat: Math.min(100, (stats.hatDetections / personDetections) * 100).toFixed(1),
       mask: Math.min(100, (stats.maskDetections / personDetections) * 100).toFixed(1),
       gloves: Math.min(100, (stats.glovesDetections / personDetections) * 100).toFixed(1),
-      glasses: Math.min(100, (stats.glassesDetections / personDetections) * 100).toFixed(1),
-      boots: Math.min(100, (stats.bootsDetections / personDetections) * 100).toFixed(1),
-      hearing: Math.min(100, (stats.hearingDetections / personDetections) * 100).toFixed(1)
+      glasses: Math.min(100, (stats.glassesDetections / personDetections) * 100).toFixed(1)
     };
   };
 
   const complianceRates = getComplianceRates();
 
-  const epiLabels = { hat: 'Capacete', mask: 'Máscara', gloves: 'Luvas', glasses: 'Óculos de Proteção', boots: 'Botas', hearing: 'Proteção Auditiva' };
-  const epiIcons = { hat: HardHat, mask: Shield, gloves: Shield, glasses: Shield, boots: Shield, hearing: Shield };
+const epiLabels = { mask: 'Máscara', gloves: 'Luvas', glasses: 'Óculos de Proteção' };
+const epiIcons = { mask: Shield, gloves: Shield, glasses: Shield };
 
   return (
   <Card className="overflow-hidden rounded-2xl shadow-lg border border-gray-200">
