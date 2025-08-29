@@ -242,8 +242,9 @@ export const EPIDetector: React.FC = () => {
       return [...filtered, ...nonPersons];
     };
 
-    setDetections(prev => filterDuplicatePersons([...prev, ...newDetections]));
-    setAlerts(prev => [...prev, ...frameAlerts]);
+    setDetections(filterDuplicatePersons(newDetections));
+    setAlerts(frameAlerts);
+
   };
 
   const getStatusSummary = () => {
@@ -272,19 +273,19 @@ export const EPIDetector: React.FC = () => {
             </div>
           </div>
 
-<Card className="w-80">
-  <CardContent className="p-3">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm text-muted-foreground">Pessoas Detectadas</p>
-        <p className="text-3xl font-bold text-primary">{personDetections}</p>
-      </div>
-      <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
-        <Users className="h-6 w-6 text-primary" />
-      </div>
-    </div>
-  </CardContent>
-</Card>
+          <Card className="w-80">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Pessoas Detectadas</p>
+                  <p className="text-3xl font-bold text-primary">{personDetections}</p>
+                </div>
+                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
 
           <div className="flex items-center gap-2">
