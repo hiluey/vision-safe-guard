@@ -11,11 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlayCircle, Shield, BarChart3, AlertTriangle, HardHat, Eye, Volume, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { RealtimeDetector } from "./RealtimeDetector";
-import { ComplianceRatesCard } from "./ComplianceRatesCard";
+import { ComplianceRatesCard } from './ComplianceRatesCard';
+
 
 interface Detection {
   id: string;
-  type: 'person' | 'hat' | 'mask' | 'gloves' | 'glasses' | 'boots' | 'hearing';
+  type: 'person' | 'mask' | 'gloves' | 'goggles' | 'coverall' | 'face_Shield';
   confidence: number;
   x: number;
   y: number;
@@ -169,9 +170,11 @@ export const EPIDetector: React.FC = () => {
 
     // EPIs
     const epiMapping: Record<string, string> = {
-      'goggles': 'glasses',
+      'goggles': 'goggles',
       'mask': 'mask',
-      'gloves': 'gloves'
+      'gloves': 'gloves',
+      'coverall': 'coverall',
+      'face_Shield': 'face_Shield'
     };
 
     // Detectados
@@ -201,7 +204,7 @@ export const EPIDetector: React.FC = () => {
     }
 
     // Lista de EPIs obrigatórios para alertas
-    const requiredEPIs = new Set(['mask', 'glasses']); // removido 'hearing'
+    const requiredEPIs = new Set(['mask', 'goggles', 'gloves', 'face_Shield', 'coverall']);
     const missingEPIs = Array.from(requiredEPIs).filter(epi => !detectedEPIClasses.has(epi));
 
     const personsInFrame = newDetections.filter(d => d.type === 'person');
@@ -213,8 +216,10 @@ export const EPIDetector: React.FC = () => {
         personId: person.id,
         missingEPIs: missingEPIs.map(epi => {
           if (epi === 'mask') return 'Máscara';
-          if (epi === 'glasses') return 'Óculos de Proteção';
-          if (epi === 'hearing') return 'Protetor Auricular';
+          if (epi === 'goggles') return 'Óculos de Proteção';
+          if (epi === 'gloves') return 'Luvas';
+          if (epi === 'coverall') return 'Macacão';
+          if (epi === 'face_Shield') return 'Proteção Facial';
           return epi;
         }),
         severity: missingEPIs.length >= 2 ? 'high' : 'medium',
@@ -303,8 +308,12 @@ export const EPIDetector: React.FC = () => {
         <div className="flex flex-nowrap gap-3 justify-between p-1 overflow-x-auto">
           {[
             { label: 'Máscara', desc: 'Protege contra poeira e agentes químicos', icon: <Shield className="h-5 w-5 text-success" />, color: 'success' },
-            { label: 'Luvas', desc: 'Protegem as mãos contra cortes e químicos', icon: <Shield className="h-5 w-5 text-success" />, color: 'success' },
+            { label: 'Luvas', desc: 'Protegem as mãos contra cortes e químicos', icon: <Shield className="h-5 w-5 text-primary" />, color: 'primary' },
             { label: 'Óculos de Proteção', desc: 'Protegem os olhos contra partículas e produtos químicos', icon: <Eye className="h-5 w-5 text-warning" />, color: 'warning' },
+            { label: 'Proteção Facial', desc: 'Resguarda o rosto contra respingos e impactos', icon: <Shield className="h-5 w-5 text-danger" />, color: 'danger' },
+            { label: 'Macacão', desc: 'Garante proteção corporal contra produtos químicos e sujeira', icon: <Shield className="h-5 w-5 text-info" />, color: 'info' },
+
+
           ].map((epi, index) => (
             <Card key={index} className="h-44 w-48 flex-shrink-0">
               <CardContent className="p-3 flex items-center justify-between">

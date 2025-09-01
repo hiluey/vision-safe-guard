@@ -7,7 +7,7 @@ import { AlertTriangle, Shield, TrendingUp, TrendingDown, Users, HardHat } from 
 
 interface Detection {
   id: string;
-  type: 'person' | 'hat' | 'mask' | 'gloves' | 'glasses' | 'boots' | 'hearing';
+  type: 'person' | 'mask' | 'gloves' | 'goggles' | 'coverall' | 'face_Shield';
   confidence: number;
   x: number;
   y: number;
@@ -38,13 +38,16 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
     const personDetections = detections.filter(d => d.type === 'person').length;
     const maskDetections = detections.filter(d => d.type === 'mask').length;
     const glovesDetections = detections.filter(d => d.type === 'gloves').length;
-    const glassesDetections = detections.filter(d => d.type === 'glasses').length;
-
+    const gogglesDetections = detections.filter(d => d.type === 'goggles').length;
+    const coverallDetections = detections.filter(d => d.type === 'coverall').length;
+    const faceShieldDetections = detections.filter(d => d.type === 'face_Shield').length;
     return {
       personDetections,
       maskDetections,
       glovesDetections,
-      glassesDetections
+      gogglesDetections,
+      faceShieldDetections,
+      coverallDetections
     };
   };
 
@@ -82,7 +85,9 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
     return {
       mask: Math.min(100, (stats.maskDetections / personDetections) * 100).toFixed(1),
       gloves: Math.min(100, (stats.glovesDetections / personDetections) * 100).toFixed(1),
-      glasses: Math.min(100, (stats.glassesDetections / personDetections) * 100).toFixed(1)
+      goggles: Math.min(100, (stats.gogglesDetections / personDetections) * 100).toFixed(1),
+      coverall: Math.min(100, (stats.coverallDetections / personDetections) * 100).toFixed(1),
+      face_Shield: Math.min(100, (stats.faceShieldDetections / personDetections) * 100).toFixed(1)
     };
   };
 
@@ -94,17 +99,17 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({ alerts, detectio
   const epiLabels = {
     mask: 'Máscara',
     gloves: 'Luvas',
-    glasses: 'Óculos de Proteção',
-
+    goggles: 'Óculos de Proteção',
+    coverall: 'Macacão',
+    face_Shield: 'Protetor Facial',
   };
 
   const epiIcons = {
-    hat: HardHat,
     mask: Shield,
     gloves: Shield,
-    glasses: Shield,
-    boots: Shield,
-    hearing: Shield
+    goggles: Shield,
+    coverall: Shield,
+    face_Shield: Shield,
   };
 
   return (

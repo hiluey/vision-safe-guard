@@ -7,7 +7,7 @@ import { Play, Pause, SkipForward, SkipBack, Volume2, Maximize } from 'lucide-re
 
 interface Detection {
   id: string;
-  type: 'person' | 'hat' | 'mask' | 'gloves' | 'glasses' | 'boots' | 'hearing';
+      type: 'person' | 'mask' | 'gloves' | 'goggles' | 'coverall' | 'face_Shield' ; 
   confidence: number;
   x: number;
   y: number;
@@ -102,12 +102,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       // Cores por tipo de detecção (seguindo os EPIs do documento)
       const colors = {
         person: '#3b82f6',    // blue
-        hat: '#22c55e',       // green (capacete)
         mask: '#f59e0b',      // amber (máscara)
         gloves: '#8b5cf6',    // violet (luvas)
-        glasses: '#06b6d4',   // cyan (óculos)
-        boots: '#ef4444',     // red (botas)
-        hearing: '#f97316'    // orange (proteção auditiva)
+        goggles: '#06b6d4',   // cyan (óculos)
+        coverall: '#10b981',  // emerald (macacão)
+        face_Shield: '#ef4444' // red (protetor facial)
       };
 
       const color = colors[type] || '#6b7280';
@@ -295,9 +294,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   key={detection.id}
                   variant="outline"
                   className={`text-xs ${detection.type === 'person' ? 'border-primary text-primary' :
-                      detection.type === 'hat' ? 'border-success text-success' :
                         detection.type === 'mask' ? 'border-warning text-warning' :
-                          detection.type === 'glasses' ? 'border-primary text-primary' :
+                          detection.type === 'goggles' ? 'border-primary text-primary' :
                             'border-muted-foreground text-muted-foreground'
                     }`}
                 >
